@@ -41,6 +41,7 @@ struct SettingsView: View {
                     Section("Server") {
                         SettingsRow(icon: "server.rack", title: "HTTP Port", value: $httpPort)
                             .onTapGesture {
+                                inputPortText = httpPort
                                 showingPortSheet = true
                             }
                     }
@@ -100,10 +101,13 @@ struct SettingsView: View {
                             .fontWeight(.medium)
                         Spacer()
                         Button("Confirm") {
-                            Settings.shared.httpPort = Int(inputPortText) ?? 8000
-                            httpPort = inputPortText
+                            guard let port = validatedHTTPPort else { return }
+                            Settings.shared.httpPort = port
+                            httpPort = String(port)
+                            inputPortText = String(port)
                             showingPortSheet = false
                         }
+                        .disabled(validatedHTTPPort == nil)
                     }
                 }
                 .padding()
@@ -116,6 +120,13 @@ struct SettingsView: View {
         serverManager.restartServer()
     }
     
+    private var validatedHTTPPort: Int? {
+        guard let port = Int(inputPortText.trimmingCharacters(in: .whitespacesAndNewlines)),
+              (1...65535).contains(port) else {
+            return nil
+        }
+        return port
+    }
     
 }
     
